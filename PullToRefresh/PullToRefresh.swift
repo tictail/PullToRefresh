@@ -52,17 +52,19 @@ public class PullToRefresh: NSObject {
   var dragging: Bool? {
     didSet {
       if state == .Loading && dragging == false && oldValue == true {
-        scrollView!.contentOffset = previousScrollViewOffset
-        scrollView!.bounces = false
-        UIView.animateWithDuration(0.3, delay: 0.0, options: [.BeginFromCurrentState, .AllowUserInteraction], animations: {
-          let insets = self.refreshView.frame.height + self.scrollViewDefaultInsets.top
-          self.scrollView!.contentInset.top = insets
-          self.scrollView!.contentOffset = CGPointMake(self.scrollView!.contentOffset.x, -insets)
-          }, completion: { finished in
-            self.scrollView!.bounces = true
-        })
-        
-        action?()
+        if let scrollView = scrollView {
+          scrollView.contentOffset = previousScrollViewOffset
+          scrollView.bounces = false
+          UIView.animateWithDuration(0.3, delay: 0.0, options: [.BeginFromCurrentState, .AllowUserInteraction], animations: {
+            let insets = self.refreshView.frame.height + self.scrollViewDefaultInsets.top
+            scrollView.contentInset.top = insets
+            scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, -insets)
+            }, completion: { finished in
+              scrollView.bounces = true
+          })
+          
+          action?()
+        }
       }
     }
   }
