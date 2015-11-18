@@ -69,7 +69,7 @@ public class PullToRefresh: NSObject {
     }
   }
   
-  var state: State = .Inital {
+  public var state: State = .Inital {
     didSet {
       animator.animateState(state)
       switch state {
