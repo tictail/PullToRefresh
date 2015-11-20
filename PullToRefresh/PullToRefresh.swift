@@ -50,24 +50,28 @@ public class PullToRefresh: NSObject {
   
   // MARK: - State
   
-  var dragging: Bool? {
+  var dragging: Bool = false {
     didSet {
-      if state == .Loading && dragging == false && oldValue == true {
-        if let scrollView = scrollView {
-          scrollView.contentOffset = previousScrollViewOffset
-          scrollView.bounces = false
-          UIView.animateWithDuration(0.3, delay: 0.0, options: [.BeginFromCurrentState, .AllowUserInteraction], animations: {
-            let insets = self.refreshView.frame.height + self.scrollViewDefaultInsets.top
-            scrollView.contentInset.top = insets
-            scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, -insets)
-            }, completion: { finished in
-              scrollView.bounces = true
-          })
-          
-          action?()
+      let didStopDragging = dragging == false && oldValue == true
+      
+      if didStopDragging {
+        if state == .Loading {
+          if let scrollView = scrollView {
+            scrollView.contentOffset = previousScrollViewOffset
+            scrollView.bounces = false
+            UIView.animateWithDuration(0.3, delay: 0.0, options: [.BeginFromCurrentState, .AllowUserInteraction], animations: {
+              let insets = self.refreshView.frame.height + self.scrollViewDefaultInsets.top
+              scrollView.contentInset.top = insets
+              scrollView.contentOffset = CGPointMake(scrollView.contentOffset.x, -insets)
+              }, completion: { finished in
+                scrollView.bounces = true
+            })
+            
+            action?()
+          }
+        } else if state == .Finished {
+          handleFinished()
         }
-      } else if state == .Finished && dragging == false && oldValue == true {
-        handleFinished()
       }
     }
   }
@@ -104,7 +108,9 @@ public class PullToRefresh: NSObject {
   private var previousScrollViewOffset: CGPoint = CGPointZero
   
   override public func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<()>) {
-    dragging = scrollView?.dragging
+    if let scrollView = scrollView {
+      dragging = scrollView.dragging
+    }
     if (context == &KVOContext && keyPath == contentOffsetKeyPath && object as? UIScrollView == scrollView) {
       let offset = previousScrollViewOffset.y + scrollViewDefaultInsets.top
       let refreshViewHeight = refreshView.frame.size.height
@@ -115,7 +121,7 @@ public class PullToRefresh: NSObject {
       case -refreshViewHeight...0 where (state != .Loading && state != .Finished):
         state = .Releasing(progress: -offset / refreshViewHeight)
       case -1000...(-refreshViewHeight):
-        if state == State.Releasing(progress: 1) && state != State.Loading && dragging! {
+        if state == State.Releasing(progress: 1) && state != State.Loading && dragging {
           state = .Loading
         } else if state != State.Loading && state != State.Finished {
           state = .Releasing(progress: 1)
