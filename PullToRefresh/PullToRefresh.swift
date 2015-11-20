@@ -18,6 +18,7 @@ public protocol RefreshViewAnimator {
 public class PullToRefresh: NSObject {
   
   public var hideDelay: NSTimeInterval = 0
+  public var refreshing: Bool = false
   
   let refreshView: UIView
   var action: (() -> ())?
@@ -72,6 +73,7 @@ public class PullToRefresh: NSObject {
   var state: State = .Inital {
     didSet {
       animator.animateState(state)
+      refreshing = state == .Loading
       switch state {
       case .Finished:
         removeScrollViewObserving()
