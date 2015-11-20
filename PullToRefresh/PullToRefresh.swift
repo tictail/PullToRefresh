@@ -66,6 +66,8 @@ public class PullToRefresh: NSObject {
           
           action?()
         }
+      } else if state == .Finished && dragging == false && oldValue == true {
+        handleFinished()
       }
     }
   }
@@ -76,14 +78,9 @@ public class PullToRefresh: NSObject {
       refreshing = state == .Loading
       switch state {
       case .Finished:
-        removeScrollViewObserving()
-        UIView.animateWithDuration(0.7, delay: hideDelay, usingSpringWithDamping: 1.0, initialSpringVelocity: 0.7, options: [.CurveEaseOut, .BeginFromCurrentState, .AllowUserInteraction], animations: {
-          self.scrollView?.contentInset = self.scrollViewDefaultInsets
-          self.scrollView?.contentOffset.y = -self.scrollViewDefaultInsets.top
-          }, completion: { finished in
-            self.addScrollViewObserving()
-            self.state = .Inital
-        })
+        if dragging == false {
+          self.handleFinished()
+        }
       default: break
       }
     }
@@ -152,6 +149,17 @@ public class PullToRefresh: NSObject {
     if state == .Loading {
       state = .Finished
     }
+  }
+  
+  func handleFinished() {
+    removeScrollViewObserving()
+    UIView.animateWithDuration(0.7, delay: hideDelay, usingSpringWithDamping: 1.0, initialSpringVelocity: 0.7, options: [.CurveEaseOut, .BeginFromCurrentState, .AllowUserInteraction], animations: {
+      self.scrollView?.contentInset = self.scrollViewDefaultInsets
+      self.scrollView?.contentOffset.y = -self.scrollViewDefaultInsets.top
+      }, completion: { finished in
+        self.addScrollViewObserving()
+        self.state = .Inital
+    })
   }
 }
 
